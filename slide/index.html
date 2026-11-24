@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git/Githubめちゃめちゃ便利なツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-dark: #0F172A;
+  --card-bg: #FFFFFF;
+  --text-main: #1E293B;
+  --text-sub: #64748B;
+  --accent-teal: #0D9488;
+  --accent-teal-light: #CCFBF1;
+  --accent-orange: #EA580C;
+  --accent-orange-light: #FFEDD5;
+  --accent-blue: #2563EB;
+  --accent-blue-light: #DBEAFE;
+  --code-bg: #1E293B;
+  --code-text: #F8FAFC;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background-color: var(--bg-dark);
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--text-main);
+  overflow: hidden;
+  user-select: none;
+}
+
+#viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#stage {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  transform-origin: center center;
+  background-color: #0F172A;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 60px;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.96) translateX(40px);
+  transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0.4s;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.slide.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateX(0);
+  transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s;
+}
+
+/* スライドヘッダー */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 3px solid var(--accent-teal);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+.header .badge {
+  background-color: var(--accent-teal);
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+.header h2 {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text-main);
+  flex: 1;
+}
+.header .page-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+/* ボディ領域 */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* タイトルスライド */
+.slide-title {
+  background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
+  color: #FFFFFF;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 60px;
+}
+.slide-title h1 {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.slide-title .subtitle {
+  font-size: 30px;
+  font-weight: 700;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 12px 28px;
+  border-radius: 40px;
+  display: inline-block;
+}
+
+/* ひとこと強調カード */
+.hero-box {
+  background-color: var(--accent-teal-light);
+  border: 3px solid var(--accent-teal);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+}
+.hero-box.orange {
+  background-color: var(--accent-orange-light);
+  border-color: var(--accent-orange);
+}
+.hero-box .icon {
+  font-size: 60px;
+  margin-bottom: 10px;
+}
+.hero-box h3 {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+.hero-box p {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+/* Grid レイアウト */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+/* カード要素 */
+.card {
+  background-color: #F8FAFC;
+  border: 2px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.card.teal { border-color: var(--accent-teal); background-color: #F0FDF4; }
+.card.orange { border-color: var(--accent-orange); background-color: #FFF7ED; }
+.card.blue { border-color: var(--accent-blue); background-color: #EFF6FF; }
+
+.card h4 {
+  font-size: 24px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card p, .card li {
+  font-size: 20px;
+  line-height: 1.6;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.card ul {
+  padding-left: 24px;
+}
+
+/* 黒い画面（ターミナル風表示） */
+.terminal {
+  background-color: var(--code-bg);
+  color: var(--code-text);
+  border-radius: 12px;
+  padding: 20px;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 22px;
+  line-height: 1.6;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  overflow-x: auto;
+}
+.terminal .prompt { color: #38BDF8; font-weight: bold; }
+.terminal .cmd { color: #FACC15; font-weight: bold; }
+.terminal .added { color: #4ADE80; }
+.terminal .removed { color: #F87171; }
+.terminal .comment { color: #94A3B8; font-style: italic; }
+
+/* フッター補足 */
+.footer-note {
+  background-color: #F1F5F9;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.footer-note::before {
+  content: "💡 ポイント";
+  background-color: var(--accent-teal);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* プログレスバー */
+#progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+  background-color: var(--accent-teal);
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+/* ナビゲーション表示 */
+#nav-info {
+  position: fixed;
+  bottom: 16px;
+  right: 24px;
+  color: #94A3B8;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.8);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="stage">
+    <div id="progress-bar"></div>
+
+    <!-- 1. 表紙 -->
+    <section class="slide slide-title active">
+      <h1>Git/GitHub<br>めちゃめちゃ便利なツール</h1>
+      <div class="subtitle">小学生でもすぐわかる！魔法のセーブ術 🚀</div>
+    </section>
+
+    <!-- 2. Gitとはひとことで -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>Git（ギット）ってひとことで何？</h2>
+        <span class="page-num">2 / 30</span>
+      </div>
+      <div class="content">
+        <div class="hero-box">
+          <div class="icon">💾 魔法のボタン</div>
+          <h3>Gitは『魔法のセーブボタン』！</h3>
+          <p>ゲームでボスの前でセーブするように、自分の作品の好きなタイミングで「セーブポイント」を作れる道具だよ！</p>
+        </div>
+      </div>
+      <div class="footer-note">パソコンの中で自分の作業を記録してくれるよ。</div>
+    </section>
+
+    <!-- 3. GitHubとはひとことで -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>GitHub（ギットハブ）ってひとことで何？</h2>
+        <span class="page-num">3 / 30</span>
+      </div>
+      <div class="content">
+        <div class="hero-box orange">
+          <div class="icon">💎 宝箱</div>
+          <h3>GitHubは『セーブデータの保管庫（宝箱）』！</h3>
+          <p>Gitで作ったセーブデータを、インターネット上の「安全な場所」に送って保存しておけるウェブサイトだよ！</p>
+        </div>
+      </div>
+      <div class="footer-note">ネット上にあるから、みんなに見せたり別のパソコンで遊んだりできるよ。</div>
+    </section>
+
+    <!-- 4. GitとGitHubの違い -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>Git と GitHub のちがい</h2>
+        <span class="page-num">4 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card teal">
+          <h4>💾 Git（自分のPC）</h4>
+          <ul>
+            <li>自分のパソコンの中で動く</li>
+            <li>セーブデータを作る道具</li>
+            <li>ネットがなくても使える！</li>
+          </ul>
+        </div>
+        <div class="card orange">
+          <h4>☁️ GitHub（ネット上）</h4>
+          <ul>
+            <li>インターネット上にある</li>
+            <li>セーブデータを預かる保管庫</li>
+            <li>みんなと共有できる！</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">「Git＝セーブするカメラ」、「GitHub＝写真を保存するアルバム」のような関係だよ。</div>
+    </section>
+
+    <!-- 5. 利点1: 失敗しても安心 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>便利な理由①：失敗してもすぐ戻せる！</h2>
+        <span class="page-num">5 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card orange">
+          <h4>❌ Gitがないとき</h4>
+          <p>間違えてデータを消したり、バグが出たら…<br><strong>もう最初からやり直し！😭</strong></p>
+        </div>
+        <div class="card teal">
+          <h4>⭕️ Gitがあるとき</h4>
+          <p>いつでもセーブした過去の状態にタイムトラベル！<br><strong>何回失敗しても平気！✨</strong></p>
+        </div>
+      </div>
+      <div class="footer-note">安心して新しい挑戦ができるのが一番のメリット！</div>
+    </section>
+
+    <!-- 6. 利点2: 変えたところがわかる -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>便利な理由②：変えた場所が一目でわかる！</h2>
+        <span class="page-num">6 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card blue">
+          <h4>🔍 どこを直したかGitが教えてくれる！</h4>
+          <p>「昨日と今日でどこが変わったっけ？」と迷う必要なし！</p>
+          <ul style="margin-top: 10px;">
+            <li><span style="color:red; font-weight:bold;">消した文字</span> ＝ 赤色で表示</li>
+            <li><span style="color:green; font-weight:bold;">新しく書いた文字</span> ＝ 緑色で表示</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">AIと一緒にコードを書くときも、AIがどこを変えたかすぐチェックできる！</div>
+    </section>
+
+    <!-- 7. 利点3: どこでも続きができる -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 1</span>
+        <h2>便利な理由③：家でも学校でも続きができる！</h2>
+        <span class="page-num">7 / 30</span>
+      </div>
+      <div class="content grid-3">
+        <div class="card">
+          <h4>1. 学校で作業</h4>
+          <p>学校のパソコンで作業してGitHubにセーブ！</p>
+        </div>
+        <div class="card orange">
+          <h4>2. GitHubに保存</h4>
+          <p>ネットの宝箱へ自動でアップロード！</p>
+        </div>
+        <div class="card teal">
+          <h4>3. 家でダウンロード</h4>
+          <p>家のパソコンで続きからすぐにスタート！</p>
+        </div>
+      </div>
+      <div class="footer-note">USBメモリを持ち歩かなくても大丈夫！</div>
+    </section>
+
+    <!-- 8. インストール準備 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 2</span>
+        <h2>使うための準備をはじめよう！</h2>
+        <span class="page-num">8 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card orange">
+          <h4>ステップ 1</h4>
+          <p><strong>GitHubのアカウント作成</strong></p>
+          <p>ネットの宝箱を使えるように会員登録（無料）するよ！</p>
+        </div>
+        <div class="card teal">
+          <h4>ステップ 2</h4>
+          <p><strong>Gitのダウンロード</strong></p>
+          <p>自分のパソコンにセーブボタンの仕組みを入れるよ！</p>
+        </div>
+      </div>
+      <div class="footer-note">最初に1回だけやればOK！</div>
+    </section>
+
+    <!-- 9. GitHubアカウント作成 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 2</span>
+        <h2>GitHubのアカウントを作ろう</h2>
+        <span class="page-num">9 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h4>🌐 https://github.com/ にアクセス</h4>
+          <ol style="padding-left: 24px; font-size: 20px; line-height: 1.8;">
+            <li>「Sign up（登録）」ボタンを押す</li>
+            <li>メールアドレスとパスワードを入力</li>
+            <li>好きなユーザー名を決める（みんなに見える名前だよ）</li>
+            <li>届いたメールの数字を入れて完了！</li>
+          </ol>
+        </div>
+      </div>
+      <div class="footer-note">ユーザー名は英語でかっこいい名前をつけよう！</div>
+    </section>
+
+    <!-- 10. Gitダウンロード -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 2</span>
+        <h2>Gitをダウンロード・インストールしよう</h2>
+        <span class="page-num">10 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card teal">
+          <h4>📥 git-scm.com からダウンロード</h4>
+          <ol style="padding-left: 24px; font-size: 20px; line-height: 1.8;">
+            <li>「git-scm.com」を開いて「Download for Windows」を押す</li>
+            <li>ダウンロードしたファイルを開く</li>
+            <li>設定画面が出たら、全部「Next（次へ）」を押していけばOK！</li>
+          </ol>
+        </div>
+      </div>
+      <div class="footer-note">設定は最初のままでバッチリ動くよ！</div>
+    </section>
+
+    <!-- 11. PowerShellとは -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 2</span>
+        <h2>PowerShell（黒い画面）を開こう！</h2>
+        <span class="page-num">11 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card">
+          <h4>⬛️ PowerShellってなに？</h4>
+          <p>文字でパソコンに命令を出す「魔法の呪文画面」だよ！</p>
+        </div>
+        <div class="card blue">
+          <h4>🔍 開きかた</h4>
+          <p>Windowsの検索バーに<strong>「PowerShell」</strong>と入力してEnterを押すだけ！</p>
+        </div>
+      </div>
+      <div class="footer-note">キーボードで呪文を打つとGitが動くよ！</div>
+    </section>
+
+    <!-- 12. 初期設定：名前の登録 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 2</span>
+        <h2>最初に1回だけ！自分の名前を登録</h2>
+        <span class="page-num">12 / 30</span>
+      </div>
+      <div class="content">
+        <p style="font-size: 22px; font-weight: bold; margin-bottom: 10px;">「だれがセーブしたか」を登録する呪文：</p>
+        <div class="terminal">
+          <span class="prompt">PS C:\></span> <span class="cmd">git config --global user.name "あなたの名前"</span><br>
+          <span class="prompt">PS C:\></span> <span class="cmd">git config --global user.email "メールアドレス"</span>
+        </div>
+      </div>
+      <div class="footer-note">メールアドレスはGitHubに登録したものと同じにしてね。</div></section>
+
+    <!-- 13. 本日の中心コマンド -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>今日おぼえる主要なコマンド一覧！</h2>
+        <span class="page-num">13 / 30</span>
+      </div>
+      <div class="content grid-3">
+        <div class="card teal">
+          <h4>① 確認する</h4>
+          <p><code>git status</code><br><code>git diff</code></p>
+        </div>
+        <div class="card orange">
+          <h4>② セーブする</h4>
+          <p><code>git add .</code><br><code>git commit</code></p>
+        </div>
+        <div class="card blue">
+          <h4>③ 元に戻す・送る</h4>
+          <p><code>git restore</code><br><code>git push / pull</code></p>
+        </div>
+      </div>
+      <div class="footer-note">難しく考えなくてOK！1つずつ動かしてみよう！</div>
+    </section>
+
+    <!-- 14. git init -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>まずはフォルダをGit用にスタート！</h2>
+        <span class="page-num">14 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h4>🌱 呪文：<code>git init</code></h4>
+          <p>自分の作った作品フォルダの中でこの呪文を打つと、セーブ機能が合体するよ！</p>
+          <div class="terminal" style="margin-top: 14px;">
+            <span class="prompt">PS C:\MyProject></span> <span class="cmd">git init</span><br>
+            <span class="comment">Initialized empty Git repository...（スタート完了！）</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">フォルダごとに最初の1回だけ実行すればOK！</div>
+    </section>
+
+    <!-- 15. git status 概要 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>【確認する①】git status で今の状態を見よう</h2>
+        <span class="page-num">15 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card teal">
+          <h4>👀 呪文：<code>git status</code></h4>
+          <p>「いま何が変わった？」「セーブはできてる？」をGitに質問する一番大切な呪文！</p>
+        </div>
+      </div>
+      <div class="footer-note">迷ったらまず git status を打とう！</div>
+    </section>
+
+    <!-- 16. git status 実践 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>git status の画面の見かた</h2>
+        <span class="page-num">16 / 30</span>
+      </div>
+      <div class="content">
+        <div class="terminal">
+          <span class="prompt">PS C:\MyProject></span> <span class="cmd">git status</span><br>
+          <span class="comment"># まだセーブ準備されてないファイルがあるよ！</span><br>
+          Untracked files:<br>
+          &nbsp;&nbsp;<span class="removed">index.html</span><br>
+          &nbsp;&nbsp;<span class="removed">style.css</span>
+        </div>
+      </div>
+      <div class="footer-note">赤字で書かれているのは「新しく変更されたファイル」だよ。</div>
+    </section>
+
+    <!-- 17. git diff 概要 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>【確認する②】git diff でAIの変更をチェック！</h2>
+        <span class="page-num">17 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card blue">
+          <h4>🔎 呪文：<code>git diff</code></h4>
+          <p>「具体的にどの文字が書き変わったか」を細かく見る呪文だよ！</p>
+          <p style="margin-top: 10px;">AI（ChatGPTやClaude）にコードを直してもらった時、どこを直されたか一目瞭然！</p>
+        </div>
+      </div>
+      <div class="footer-note">AIに勝手にコードを書き換えられてもすぐに気づけるね！</div>
+    </section>
+
+    <!-- 18. git diff 実践 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 3</span>
+        <h2>git diff の見かた（赤と緑）</h2>
+        <span class="page-num">18 / 30</span>
+      </div>
+      <div class="content">
+        <div class="terminal">
+          <span class="prompt">PS C:\MyProject></span> <span class="cmd">git diff</span><br>
+          <span class="removed">- &lt;h1&gt;こんにちは&lt;/h1&gt;</span> <span class="comment">←消された！</span><br>
+          <span class="added">+ &lt;h1&gt;こんにちは、Git！&lt;/h1&gt;</span> <span class="comment">←新しく追加された！</span>
+        </div>
+      </div>
+      <div class="footer-note">マイナス(-)が消した場所、プラス(+)が増えた場所だよ！</div>
+    </section>
+
+    <!-- 19. セーブの2ステップ説明 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 4</span>
+        <h2>【履歴を保存する】セーブは2ステップ！</h2>
+        <span class="page-num">19 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card orange">
+          <h4>ステップ 1：まとめる</h4>
+          <p><code>git add .</code></p>
+          <p>セーブしたいファイルをカバンにまとめるイメージ！</p>
+        </div>
+        <div class="card teal">
+          <h4>ステップ 2：セーブ！</h4>
+          <p><code>git commit -m "メモ"</code></p>
+          <p>メモ（タイトル）をつけてパシャリと記録！</p>
+        </div>
+      </div>
+      <div class="footer-note">この2つの呪文が「セーブボタン」の正体！</div>
+    </section>
+
+    <!-- 20. git add . -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 4</span>
+        <h2>ステップ1：git add . （カバンに入れる）</h2>
+        <span class="page-num">20 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card orange">
+          <h4>🎒 呪文：<code>git add .</code></h4>
+          <p>「.（ドット）」は「全部」という意味！変更したファイルを全部カバンに入れるよ！</p>
+          <div class="terminal" style="margin-top: 14px;">
+            <span class="prompt">PS C:\MyProject></span> <span class="cmd">git add .</span><br>
+            <span class="comment">（静かにカバンに入ったよ！）</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">addのあとに「半角スペース」と「ドット」を忘れないでね！</div>
+    </section>
+
+    <!-- 21. git commit -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 4</span>
+        <h2>ステップ2：git commit（メモつきセーブ）</h2>
+        <span class="page-num">21 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card teal">
+          <h4>📸 呪文：<code>git commit -m "メッセージ"</code></h4>
+          <p>「何を作ったか」が自分でわかるメモをつけてセーブ完了！</p>
+          <div class="terminal" style="margin-top: 14px;">
+            <span class="prompt">PS C:\MyProject></span> <span class="cmd">git commit -m "タイトルを変更したよ"</span><br>
+            <span class="added">[main 1a2b3c4] タイトルを変更したよ</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">メモは「背景色を変えた」「ボタンを作った」など分かりやすく書こう！</div>
+    </section>
+
+    <!-- 22. git restore 概要 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 5</span>
+        <h2>【元に戻す】間違えたらタイムトラベル！</h2>
+        <span class="page-num">22 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card orange">
+          <h4>↩️ 呪文：<code>git restore ファイル名</code></h4>
+          <p>AIの修正が変だったり、自分でコードを壊しちゃった時に大活躍！</p>
+          <p style="margin-top: 10px;">「最後にセーブした状態」までファイルを元通りに戻してくれるよ！</p>
+        </div>
+      </div>
+      <div class="footer-note">失敗を怖がらなくて良くなる魔法の消しゴムだよ！</div>
+    </section>
+
+    <!-- 23. git restore 実践 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 5</span>
+        <h2>git restore のつかいかた</h2>
+        <span class="page-num">23 / 30</span>
+      </div>
+      <div class="content">
+        <div class="terminal">
+          <span class="comment"># index.html を変える前に戻す呪文</span><br>
+          <span class="prompt">PS C:\MyProject></span> <span class="cmd">git restore index.html</span><br><br>
+          <span class="comment"># 変更したやつ全部をもとに戻す呪文</span><br>
+          <span class="prompt">PS C:\MyProject></span> <span class="cmd">git restore .</span>
+        </div>
+      </div>
+      <div class="footer-note">元に戻すと今の作業は消えちゃうから、戻す前に確認してね！</div>
+    </section>
+
+    <!-- 24. GitHubへ送る準備 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 6</span>
+        <h2>自分のセーブデータをネットの宝箱へ！</h2>
+        <span class="page-num">24 / 30</span>
+      </div>
+      <div class="content grid-2">
+        <div class="card teal">
+          <h4>⬆️ 宝箱へ送る</h4>
+          <p><code>git push</code></p>
+          <p>自分のPCからGitHubへアップロード！</p>
+        </div>
+        <div class="card blue">
+          <h4>⬇️ 宝箱から取り出す</h4>
+          <p><code>git pull</code></p>
+          <p>GitHubから最新データを取り込む！</p>
+        </div>
+      </div>
+      <div class="footer-note">これでどこでもバックアップ完了！</div>
+    </section>
+
+    <!-- 25. git push -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 6</span>
+        <h2>git push で宝箱（GitHub）に保存！</h2>
+        <span class="page-num">25 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card teal">
+          <h4>🚀 呪文：<code>git push origin main</code></h4>
+          <div class="terminal" style="margin-top: 14px;">
+            <span class="prompt">PS C:\MyProject></span> <span class="cmd">git push origin main</span><br>
+            <span class="added">Everything up-to-date（宝箱に送れたよ！）</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">GitHubの画面を開くと、自分のコードが反映されているのが見れるよ！</div>
+    </section>
+
+    <!-- 26. git pull -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 6</span>
+        <h2>git pull で最新の宝箱から受け取る！</h2>
+        <span class="page-num">26 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card blue">
+          <h4>📥 呪文：<code>git pull origin main</code></h4>
+          <div class="terminal" style="margin-top: 14px;">
+            <span class="prompt">PS C:\MyProject></span> <span class="cmd">git pull origin main</span><br>
+            <span class="added">Updating 1a2b3c4..5d6e7f8（最新データになったよ！）</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">作業を始めるときは、まず git pull して最新にしてから遊ぼう！</div>
+    </section>
+
+    <!-- 27. 一連の流れまとめ -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 7</span>
+        <h2>いつもの作業ループをおぼえよう！</h2>
+        <span class="page-num">27 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h4>🔄 黄金の4ステップ</h4>
+          <ol style="padding-left: 30px; font-size: 22px; line-height: 1.8;">
+            <li>コードを書く・AIに直してもらう</li>
+            <li><code>git status</code> / <code>git diff</code>（変化をチェック）</li>
+            <li><code>git add .</code> ➔ <code>git commit -m "メモ"</code>（セーブ！）</li>
+            <li><code>git push</code>（宝箱へアップロード！）</li>
+          </ol>
+        </div>
+      </div>
+      <div class="footer-note">この順番さえ覚えておけば、君もGitマスター！</div>
+    </section>
+
+    <!-- 28. 難しい運用は後回し -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">Part 7</span>
+        <h2>難しい運用の話はあとで大丈夫！</h2>
+        <span class="page-num">28 / 30</span>
+      </div>
+      <div class="content">
+        <div class="card orange">
+          <h4>🙅‍♂️ いまは覚えなくていいこと</h4>
+          <ul style="padding-left: 24px; font-size: 20px; line-height: 1.8;">
+            <li>ブランチ（branch）の複雑な枝分かれ</li>
+            <li>プルリクエスト（Pull Request）の審査</li>
+            <li>コンフリクト（衝突）の難しい解消</li>
+          </ul>
+          <p style="margin-top: 10px; font-weight: bold; color: var(--accent-orange);">まずは「セーブ（commit）」と「保管（push）」に慣れることが一番大事！</p>
+        </div>
+      </div>
+      <div class="footer-note">最初から全部覚えなくてOK！必要になったら挑戦しよう！</div>
+    </section>
+
+    <!-- 29. 早見表 -->
+    <section class="slide">
+      <div class="header">
+        <span class="badge">まとめ</span>
+        <h2>これだけ見ればOK！コマンド早見表</h2>
+        <span class="page-num">29 / 30</span>
+      </div>
+      <div class="content">
+        <table style="width:100%; border-collapse:collapse; font-size:18px;">
+          <tr style="background:#0F172A; color:white;">
+            <th style="padding:10px; text-align:left;">やりたいこと</th>
+            <th style="padding:10px; text-align:left;">打つ呪文（コマンド）</th>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:10px; font-weight:bold;">状態を確認したい</td>
+            <td style="padding:10px; font-family:monospace; color:#2563EB;">git status</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd; background:#F8FAFC;">
+            <td style="padding:10px; font-weight:bold;">変えた場所を見たい</td>
+            <td style="padding:10px; font-family:monospace; color:#2563EB;">git diff</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:10px; font-weight:bold;">ファイルをまとめる</td>
+            <td style="padding:10px; font-family:monospace; color:#0D9488;">git add .</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd; background:#F8FAFC;">
+            <td style="padding:10px; font-weight:bold;">セーブ（記録）する</td>
+            <td style="padding:10px; font-family:monospace; color:#0D9488;">git commit -m "メモ"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:10px; font-weight:bold;">変更前に戻す</td>
+            <td style="padding:10px; font-family:monospace; color:#EA580C;">git restore .</td>
+          </tr>
+          <tr style="border-bottom:1px solid #ddd; background:#F8FAFC;">
+            <td style="padding:10px; font-weight:bold;">GitHubへ送る</td>
+            <td style="padding:10px; font-family:monospace; color:#0D9488;">git push</td>
+          </tr>
+        </table>
+      </div>
+      <div class="footer-note">困ったときはこの画面を振り返ろう！</div>
+    </section>
+
+    <!-- 30. 最後のメッセージ -->
+    <section class="slide slide-title">
+      <h1>おつかれさまでした！🎉</h1>
+      <p style="font-size: 28px; font-weight: 700; margin-top: 20px;">
+        GitとGitHubを使いこなして<br>どんどん自由につくってみよう！
+      </p>
+      <div class="subtitle" style="margin-top: 30px; background-color: #EA580C;">
+        さあ、魔法のセーブボタンを押そう！ 🚀
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="nav-info">◀ / ▶ キーでスライド移動</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  let currentIndex = 0;
+
+  function updateSlide(index) {
+    if (index < 0) index = 0;
+    if (index >= slides.length) index = slides.length - 1;
+    currentIndex = index;
+
+    slides.forEach((slide, idx) => {
+      if (idx === currentIndex) {
+        slide.classList.add('active');
+      } else {
+        slide.classList.remove('active');
+      }
+    });
+
+    const progress = ((currentIndex + 1) / slides.length) * 100;
+    progressBar.style.width = `${progress}%`;
+  }
+
+  function nextSlide() {
+    updateSlide(currentIndex + 1);
+  }
+
+  function prevSlide() {
+    updateSlide(currentIndex - 1);
+  }
+
+  // キーボードでの操作
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      prevSlide();
+    }
+  });
+
+  // 画面クリック操作 (右半分で進む、左半分で戻る)
+  document.getElementById('stage').addEventListener('click', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width / 2) {
+      nextSlide();
+    } else {
+      prevSlide();
+    }
+  });
+
+  // レスポンシブ用スケール調整
+  function resizeStage() {
+    const stage = document.getElementById('stage');
+    const scaleX = window.innerWidth / 1280;
+    const scaleY = window.innerHeight / 720;
+    const scale = Math.min(scaleX, scaleY) * 0.96;
+    stage.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('resize', resizeStage);
+  resizeStage();
+  updateSlide(0);
+</script>
+</body>
+</html>
